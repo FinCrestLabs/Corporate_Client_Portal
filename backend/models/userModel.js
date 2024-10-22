@@ -1,22 +1,42 @@
-const db = require('../config/db');
+// /models/userModel.js
+const db = require('../config/db'); // Assuming db is set up for MySQL connection
+const bcrypt = require('bcryptjs');
 
 class User {
-    static create(username, password_hash, role, client_id) {
-        return new Promise((resolve, reject) => {
-            db.query('INSERT INTO users (username, password_hash, role, client_id) VALUES (?, ?, ?, ?)', [username, password_hash, role, client_id], (error, results) => {
-                if (error) return reject(error);
-                resolve(results.insertId);
-            });
-        });
+    static async findAllClientUsernames() {
+        const [rows] = await db.query("SELECT username FROM users WHERE role = 'client'");
+        return rows;
     }
 
-    static findByUsername(username) {
-        return new Promise((resolve, reject) => {
-            db.query('SELECT * FROM users WHERE username = ?', [username], (error, results) => {
-                if (error) return reject(error);
-                resolve(results[0]);
-            });
-        });
+    static async createUser(username, password, role, clientId) {
+        const passwordHash = await bcrypt.hash(password, 10);
+        const [result] = await db.query(
+            "INSERT INTO users (username, password_hash, role, client_id) VALUES (?, ?, ?, ?)",
+            [username, passwordHash, role, clientId]
+        );
+        return result.insertId;
+    }
+
+    static async updatePassword(userId, newPassword) {
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+        await db.query(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            [passwordHash, userId]
+        );
+    }
+
+    static async findById(userId) {
+        const [rows] = await db.query("SELECT * FROM users WHERE id = ?", [userId]);
+        return rows[0];
+    }
+
+    static async findByUsername(username) {
+        const [rows] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
+        return rows[0];
+    }
+
+    static async deleteUser(userId) {
+        await db.query("DELETE FROM users WHERE id = ?", [userId]);
     }
 }
 
