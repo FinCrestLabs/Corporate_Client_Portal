@@ -1,8 +1,32 @@
 // /controllers/clientController.js
+const { body, validationResult } = require('express-validator');
 const Client = require('../models/clientModel');
+
+// Input validation middleware for creating a client
+const validateClientData = [
+    body('name').isString().notEmpty().withMessage('Name is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('phone').isString().notEmpty().withMessage('Phone number is required'),
+    body('dob').isDate().withMessage('Valid date of birth is required'),
+    body('city').isString().notEmpty().withMessage('City is required'),
+    body('address').isString().notEmpty().withMessage('Address is required'),
+    body('reference').optional().isString(),
+    body('pan_card_number').optional().isString(),
+    body('aadhar_number').optional().isString()
+];
 
 exports.createClient = async (req, res) => {
     try {
+        // Validate input
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Validation errors',
+                errors: errors.array()
+            });
+        }
+
         const clientData = req.body;
         const clientId = await Client.create(clientData);
         res.status(201).json({
