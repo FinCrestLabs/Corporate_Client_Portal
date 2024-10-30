@@ -3,6 +3,8 @@ const router = express.Router();
 const financialController = require('../controllers/financialController');
 
 router.post('/', financialController.createFinancialData);
-router.get('/:client_id', financialController.getFinancialDataByClientId);
+router.get('/', financialController.getAllFinancialData);
+router.get('/:id', financialController.getFinancialDataById);
+router.get('/client/:client_id', financialController.getFinancialDataByClientId);
 
 module.exports = router;
